@@ -1,0 +1,45 @@
+run:
+  input_dir: <path-to-POSCAR-POTCAR-KPOINTS>
+  output_dir: <new-output-directory>
+  material: SiC
+  prefix: SiC_v02
+  expected_elements: [Si, C]
+
+environment:
+  vasp_bin: <path-to-vasp_std>
+  oneapi_setup: <path-to-setvars.sh>
+  mpi_launcher: mpirun
+  mpi_cores: 4
+  timeout_seconds: 1800
+  conda_env: vasp
+
+parameters:
+  encut: 414
+  nbands: 64
+  kpoints: [6, 6, 6]
+  kpoints_shift: [0, 0, 0]
+  response: density-density
+  encut_policy: warn
+  dft:
+    algo: Normal
+    ediff: 1E-6
+    ismear: 0
+    sigma: 0.01
+    ispin: 1
+    ibrion: -1
+    nsw: 0
+    lwave: true
+    lcharg: true
+  loptics:
+    istart: 1
+    icharg: 11
+    algo: Exact
+    ediff: 1E-8
+    loptics: true
+    cshift: 0.100
+    nedos: 2000
+    ismear: 0
+    sigma: 0.01
+    ispin: 1
+    lwave: true
+    lcharg: false

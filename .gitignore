@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.log
+*.stdout
+*.stderr
+WAVECAR
+WAVEDER
+CHGCAR
+CHG
+OUTCAR
+vasprun.xml
+POTCAR
+DOSCAR
+EIGENVAL
+CONTCAR
+XDATCAR

@@ -1,0 +1,4 @@
+interface:
+  display_name: "VASP independent-particle optics (mc-v0.2)"
+  short_description: "Validate POSCAR/POTCAR/KPOINTS, run DFT to LOPTICS, and plot six optical quantities in energy and wavelength domains"
+  default_prompt: "Use $vasp-sic-optics-stage1-mc-v0-2 to run a configurable VASP DFT-to-LOPTICS workflow from config.yaml, checking POTCAR order, ENMAX, and KPOINTS before execution."

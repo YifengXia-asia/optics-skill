@@ -1,0 +1,60 @@
+# vasp-sic-optics-stage1-mc-v0.2 — example configuration
+# ------------------------------------------------------------------
+# Copy to config.yaml and fill ONLY the path/environment placeholders.
+# Physics parameters are FIXED at the validated stage-1 values and must
+# not be edited (see references/parameter-decisions.md).
+#
+# IMPORTANT: this example contains NO real machine paths. Use relative
+# paths or <placeholder> values only, so the config stays portable.
+
+run:
+  input_dir: ./inputs            # directory containing POSCAR, POTCAR, KPOINTS
+  output_dir: ./stage1_demo      # must NOT already exist
+  material: SiC                  # display name; change for another material
+  prefix: SiC                    # filename prefix; change for another material
+  expected_elements: [Si, C]     # optional; checked against POSCAR/POTCAR order
+
+environment:
+  vasp_bin: vasp_std             # VASP executable name or <absolute-path-to-vasp_std>
+  oneapi_setup: <absolute-path-to-oneapi-setvars.sh>   # path to the site oneAPI setup script
+  mpi_launcher: mpirun
+  mpi_cores: 4
+  timeout_seconds: 3600
+  # post-processing conda env name or <absolute-path>; used only for guidance
+  conda_env: <optics-conda-env>
+
+# --- Stage-1 defaults (user may change after checking convergence) -------
+# These are the SiC demo defaults, not universal constants. The loader checks
+# the actual POTCAR and KPOINTS instead of rejecting a different material.
+parameters:
+  encut: 414
+  nbands: 64
+  kpoints: [6, 6, 6]             # Gamma-centered mesh
+  kpoints_shift: [0, 0, 0]
+  response: density-density      # independent-particle interband response
+  encut_policy: warn             # warn if ENCUT < max(POTCAR ENMAX)
+
+  dft:                           # ground state
+    algo: Normal
+    ediff: 1E-6
+    ismear: 0
+    sigma: 0.01
+    ispin: 1
+    ibrion: -1
+    nsw: 0
+    lwave: true
+    lcharg: true
+
+  loptics:                       # response step
+    istart: 1
+    icharg: 11
+    algo: Exact
+    ediff: 1E-8
+    loptics: true
+    cshift: 0.100
+    nedos: 2000
+    ismear: 0
+    sigma: 0.01
+    ispin: 1
+    lwave: true
+    lcharg: false
