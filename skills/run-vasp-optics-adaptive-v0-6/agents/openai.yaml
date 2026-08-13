@@ -1,0 +1,4 @@
+interface:
+  display_name: "Run adaptive VASP optics (v0.6)"
+  short_description: "Preflight, classify, run, extract, and validate a VASP optical workflow"
+  default_prompt: "Use $run-vasp-optics-adaptive-v0-6 to preflight the environment, inspect POSCAR/POTCAR/KPOINTS, classify the system without material-name gates, obtain confirmation for recommended parameters, run DFT to LOPTICS, extract energy/wavelength optical data, and require VALIDATION=PASS."
