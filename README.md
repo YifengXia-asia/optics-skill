@@ -5,6 +5,7 @@
 ## 内容
 
 - `skills/vasp-sic-optics-stage1-mc-v0.2/`：可配置的 VASP DFT → LOPTICS → 光学后处理 Skill。
+- `skills/vasp-optics-mc-v0.3/`：材料适配版，首批 profile 为 Si、SiC、GaAs，并支持 generic 检查。
 - `validation/sic-v0.2/`：SiC 验证流程、配置模板、可复用验证脚本和结果摘要。
 
 Skill 的默认示例是 SiC，但 v0.2 允许用户修改材料名、输出前缀、POSCAR/POTCAR/KPOINTS、ENCUT、NBANDS 和路径。程序会检查 POSCAR/POTCAR 顺序、POTCAR 的 ENMAX/ZVAL 以及 Gamma-centered KPOINTS。
@@ -23,7 +24,7 @@ python scripts/plot.py --config config.yaml
 python scripts/validate.py --config config.yaml
 ```
 
-完整规则请阅读 Skill 目录中的 `SKILL.md`；可复现验证说明见 `validation/sic-v0.2/README.md`。
+完整规则请阅读对应 Skill 目录中的 `SKILL.md`；可复现验证说明见 `validation/sic-v0.2/README.md`，材料适配审查见 `validation/material-adaptation-v0.3.md`。
 
 ## 适用边界
 

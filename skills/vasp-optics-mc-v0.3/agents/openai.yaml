@@ -1,0 +1,4 @@
+interface:
+  display_name: "VASP material-aware optics (mc-v0.3)"
+  short_description: "Adapt and validate VASP DFT-to-LOPTICS for Si, SiC, GaAs, or a documented custom material"
+  default_prompt: "Use $vasp-optics-mc-v0-3 to inspect POSCAR/POTCAR/KPOINTS, select a material profile, explain parameter choices, run DFT to LOPTICS, and validate energy/wavelength optical outputs."
