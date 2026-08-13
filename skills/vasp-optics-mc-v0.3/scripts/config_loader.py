@@ -304,6 +304,12 @@ def main() -> int:
                 print(f"CONFIG=INVALID;{message}", file=sys.stderr)
             return 2
         print(f"CONFIG=VALID;OUTPUT={config['run']['output_dir']}")
+        _, metadata = inspect_inputs(config)
+        profile_name = metadata.get("profile", {}).get("name", "generic") if metadata.get("profile") else "generic"
+        print(f"MATERIAL={metadata['material']};PROFILE={profile_name};POTCAR_ELEMENTS={[x['element'] for x in metadata['potcar']]};MAX_ENMAX={metadata['max_enmax']}")
+        print(f"DECISION={metadata['profile_summary']}")
+        for recommendation in metadata.get("recommendations", []):
+            print(f"RECOMMENDATION={recommendation}")
         return 0
 
     p = config["parameters"]
