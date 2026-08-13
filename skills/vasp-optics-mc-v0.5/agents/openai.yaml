@@ -1,0 +1,4 @@
+interface:
+  display_name: "VASP system-adaptive optics (mc-v0.5)"
+  short_description: "Classify a VASP system, obtain confirmation, run DFT-to-LOPTICS, and validate energy/wavelength outputs"
+  default_prompt: "Use $vasp-optics-mc-v0-5 to inspect POSCAR/POTCAR/KPOINTS, report exact input/output contracts and risks, obtain confirmation for recommended parameters, run DFT to LOPTICS, extract energy/wavelength optical data, and require VALIDATION=PASS."
