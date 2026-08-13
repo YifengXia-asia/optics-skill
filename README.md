@@ -1,21 +1,21 @@
 # VASP 光学 Skill
 
-这是一个面向 VASP 独立粒子光学计算的 Skill 仓库。
+本仓库提供从 VASP DFT 到独立粒子 LOPTICS、光学量提取和只读验证的可复用 Skill。
 
-## 内容
+## 版本
 
-- `skills/vasp-sic-optics-stage1-mc-v0.2/`：可配置的 VASP DFT → LOPTICS → 光学后处理 Skill。
-- `skills/vasp-optics-mc-v0.3/`：材料适配版，首批 profile 为 Si、SiC、GaAs，并支持 generic 检查。
-- `validation/sic-v0.2/`：SiC 验证流程、配置模板、可复用验证脚本和结果摘要。
+- `skills/vasp-sic-optics-stage1-mc-v0.2/`：最初的可配置 SiC 阶段一流程。
+- `skills/vasp-optics-mc-v0.3/`：保留了 Si/SiC/GaAs 起始 profile 的过渡版本。
+- `skills/vasp-optics-mc-v0.4/`：当前推荐版本。它不按材料名称硬匹配，而是从 POSCAR/POTCAR/KPOINTS 分类体系，给出可审阅的参数建议，确认后才允许准备和运行。
 
-Skill 的默认示例是 SiC，但 v0.2 允许用户修改材料名、输出前缀、POSCAR/POTCAR/KPOINTS、ENCUT、NBANDS 和路径。程序会检查 POSCAR/POTCAR 顺序、POTCAR 的 ENMAX/ZVAL 以及 Gamma-centered KPOINTS。
-
-## 快速使用
+## v0.4 快速使用
 
 ```bash
-cd skills/vasp-sic-optics-stage1-mc-v0.2
+cd skills/vasp-optics-mc-v0.4
 cp config.yaml.example config.yaml
-# 编辑 config.yaml 中的输入目录、输出目录和服务器环境
+# 将 POSCAR、POTCAR、KPOINTS 放入 config.yaml 的 input_dir
+python scripts/config_loader.py --config config.yaml --inspect
+# 审阅分类和建议后，在 config.yaml 中设置 confirm_recommendations: true
 python scripts/config_loader.py --config config.yaml --check
 python scripts/prepare.py --config config.yaml
 python scripts/run.py --config config.yaml
@@ -24,8 +24,8 @@ python scripts/plot.py --config config.yaml
 python scripts/validate.py --config config.yaml
 ```
 
-完整规则请阅读对应 Skill 目录中的 `SKILL.md`；可复现验证说明见 `validation/sic-v0.2/README.md`，材料适配审查见 `validation/material-adaptation-v0.3.md`。
+`references/parameter-decisions.md` 解释分类和参数公式，`references/online-validation.md` 规定如何查找同组成、同晶相、同近似的权威对照。SiC 的 VASP 官方在线对照记录在 `validation/online/SiC.md`。
 
 ## 适用边界
 
-本仓库的流程是独立粒子 LOPTICS，不包含 GW、BSE、CHI/RPA、局域场、声子/离子介电、SOC、磁性或结构优化。
+默认流程是三维周期体系的独立粒子光学响应。GW、BSE、SOC、强磁性、金属专用光学、二维/表面真空归一化、声子/离子介电响应和结构优化需要单独的物理方案，不应只换材料名称继续运行。

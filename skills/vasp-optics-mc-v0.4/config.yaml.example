@@ -1,0 +1,56 @@
+# vasp-optics-mc-v0.4 配置示例
+# ------------------------------------------------------------------
+# 先复制为 config.yaml，再运行 --inspect。不要先猜材料名称或硬编码参数。
+# inspect 会从 POSCAR/POTCAR/KPOINTS 判断体系类别并给出建议；人工确认后
+# 将 confirm_recommendations 改为 true，prepare.py 才允许创建运行目录。
+
+run:
+  input_dir: ./inputs
+  output_dir: ./stage1_demo
+  material: auto                 # 只用于显示；auto 从元素和原子数生成化学式
+  prefix: auto                   # 只控制 CSV/PNG 文件名，可自由修改
+  expected_elements: []          # 可选；按 POSCAR 元素顺序填写
+  system_hint: auto              # auto, insulator, semiconductor, metal
+  target_max_energy_eV: null     # 可选；用于判断空带是否覆盖目标光子能量
+  confirm_recommendations: false # 审阅 --inspect 后才改为 true
+
+environment:
+  vasp_bin: vasp_std
+  oneapi_setup: <absolute-path-to-oneapi-setvars.sh>
+  mpi_launcher: mpirun
+  mpi_cores: 4
+  timeout_seconds: 3600
+  conda_env: <optics-conda-env>
+
+parameters:
+  encut: auto                    # 从 POTCAR 的最大 ENMAX 向上取整到 10 eV
+  nbands: auto                   # 由 ZVAL 估算占据带并加空带余量
+  kpoints: auto                  # 由晶格长度估算；不会改写用户的 KPOINTS
+  kpoints_shift: [0, 0, 0]
+  response: density-density
+  encut_policy: warn
+
+  dft:
+    algo: Normal
+    ediff: 1E-6
+    ismear: auto
+    sigma: auto
+    ispin: auto
+    ibrion: -1
+    nsw: 0
+    lwave: true
+    lcharg: true
+
+  loptics:
+    istart: 1
+    icharg: 11
+    algo: Exact
+    ediff: 1E-8
+    loptics: true
+    cshift: auto
+    nedos: 2000
+    ismear: auto
+    sigma: auto
+    ispin: auto
+    lwave: true
+    lcharg: false
