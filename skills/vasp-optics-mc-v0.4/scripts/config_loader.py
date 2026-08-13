@@ -371,7 +371,8 @@ def resolve_config(config: dict) -> tuple[list[str], dict]:
     raw_shift = raw.get("kpoints_shift", p.get("kpoints_shift"))
     if raw_shift and any(abs(a - b) > 1e-12 for a, b in zip(kpoints["shift"], raw_shift)):
         problems.append(f"KPOINTS shift {kpoints['shift']} differs from configured shift {raw_shift}")
-    if kpoints["mode"] not in {"g", "gamma", "gamma-centered", "monkhorst-pack"}:
+    mode_normalized = re.sub(r"[^a-z]", "", kpoints["mode"])
+    if mode_normalized not in {"g", "gamma", "gammacentered", "monkhorstpack", "m"}:
         problems.append(f"KPOINTS is not an explicit Gamma/Monkhorst mesh: mode={kpoints['mode']}")
     enmax = values["max_potcar_enmax"]
     if enmax is not None and p.get("encut") is not None and float(p["encut"]) < enmax:
