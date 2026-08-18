@@ -1,0 +1,87 @@
+# run-vasp-optics-adaptive-v0.7 配置示例
+# ------------------------------------------------------------------
+# 先复制为 config.yaml，再运行 --inspect。不要先猜材料名称或硬编码参数。
+# inspect 会从 POSCAR/POTCAR/KPOINTS 判断体系类别并给出建议；人工确认后
+# 将 confirm_recommendations 改为 true，prepare.py 才允许创建运行目录。
+# 当前版本的 VASP 运行步骤支持 Linux/Unix；WSL/ macOS 需要满足文档中的额外条件。
+# 不要把已有 output_dir 覆盖。
+
+run:
+  input_dir: ./inputs
+  output_dir: ./stage1_demo
+  material: auto                 # 只用于显示；auto 从元素和原子数生成化学式
+  prefix: auto                   # 只控制 CSV/PNG 文件名，可自由修改
+  expected_elements: []          # 可选；按 POSCAR 元素顺序填写
+  system_hint: auto              # auto, insulator, semiconductor, metal
+  target_max_energy_eV: null     # 可选；用于判断空带是否覆盖目标光子能量
+  confirm_recommendations: false # 审阅 --inspect 后才改为 true
+  confirm_electronic_classification: false # 基态 DFT 后审阅 system_classification.json
+  allow_nonbulk_supercell_optics: false    # 二维/一维/分子结果依赖真空体积，必须另行确认
+  metal_optics_mode: stop        # stop, interband-only, drude
+
+environment:
+  vasp_bin: vasp_std
+  vasp_gamma_bin: ""            # 可选；实际 KPOINTS=1x1x1 Gamma 时使用
+  auto_select_gamma: true        # 只按 KPOINTS 选择，不按材料名称
+  oneapi_setup: <absolute-path-to-oneapi-setvars.sh>
+  mpi_launcher: mpirun
+  mpi_cores: 4
+  timeout_seconds: 3600
+  conda_env: <optics-conda-env>
+
+parameters:
+  parameter_policy: preserve-user # 有输入 INCAR 时优先继承用户的泛函/磁性/SOC/DFT+U 标签
+  encut: auto                    # 从 POTCAR 的最大 ENMAX 向上取整到 10 eV
+  nbands: auto                   # 由 ZVAL 估算占据带并加空带余量
+  kpoints: auto                  # 由晶格长度估算；不会改写用户的 KPOINTS
+  kpoints_shift: [0, 0, 0]
+  response: density-density
+  encut_policy: warn
+  heuristics:                    # 可审阅起点，不是收敛证明
+    encut_rounding_eV: 10.0
+    kpoints_density_gapped: 6.0
+    kpoints_density_metal: 8.0
+    nbands_minimum: 32
+    nbands_empty_minimum: 16
+    nbands_empty_fraction: 0.5
+    nbands_fallback: 64
+
+  dft:
+    algo: Normal
+    ediff: 1E-6
+    ismear: auto
+    sigma: auto
+    ispin: auto
+    ibrion: -1
+    nsw: 0
+    lwave: true
+    lcharg: true
+
+  loptics:
+    istart: 1
+    icharg: 11
+    algo: Exact
+    ediff: 1E-8
+    loptics: true
+    cshift: auto
+    wplasmai: 0.0                # 仅 metal_optics_mode=drude 时使用；需用户给出物理依据
+    nedos: 2000
+    ismear: auto
+    sigma: auto
+    ispin: auto
+    lwave: true
+    lcharg: false
+
+postprocess:
+  wavelength_constant_nm_eV: 1239.841984 # wavelength_nm = constant / energy_eV
+  plot_min_nm: 300.0                    # alpha/R window lower bound; configurable
+  plot_max_nm: 2500.0                   # alpha/R window upper bound; configurable
+
+classification:
+  gap_threshold_eV: 0.05          # 小于等于此值归为 metal-or-semimetal
+  insulator_gap_threshold_eV: 3.0 # 仅用于报告标签，不替代严格材料定义
+  occupation_tolerance: 1E-3
+  vacuum_axis_min_angstrom: 6.0        # 只触发复核，不代表真空已收敛
+  vacuum_axis_aspect_ratio_min: 1.8
+  slab_aspect_ratio_min: 2.5
+  isolated_min_cell_angstrom: 10.0

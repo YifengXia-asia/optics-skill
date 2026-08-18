@@ -1,0 +1,33 @@
+run:
+  input_dir: /path/to/optics-type-tests-v0.7/inputs/bulk-3d
+  output_dir: /path/to/optics-type-tests-v0.7/runs/bulk-3d
+  material: bulk-3d-test
+  prefix: bulk3d
+  system_hint: auto
+  confirm_recommendations: true
+  confirm_electronic_classification: true
+  allow_nonbulk_supercell_optics: false
+  metal_optics_mode: interband-only
+environment:
+  vasp_bin: /path/to/vasp_std
+  oneapi_setup: /opt/intel/oneapi/setvars.sh
+  mpi_launcher: /opt/intel/oneapi/mpi/latest/bin/mpirun
+  mpi_cores: 4
+  timeout_seconds: 1200
+  conda_env: /path/to/conda-env
+parameters:
+  parameter_policy: preserve-user
+  encut: auto
+  nbands: auto
+  kpoints: auto
+  response: density-density
+  dft:
+    ediff: 1E-6
+  loptics:
+    ediff: 1E-8
+    cshift: auto
+    nedos: 2000
+postprocess:
+  wavelength_constant_nm_eV: 1239.841984
+  plot_min_nm: 300
+  plot_max_nm: 2500

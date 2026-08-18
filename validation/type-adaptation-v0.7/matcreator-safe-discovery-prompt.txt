@@ -1,0 +1,9 @@
+我是第一次使用 VASP。请只根据已安装的 run-vasp-optics-adaptive-v0-7 Skill，告诉我：
+
+1. 我需要准备哪些输入文件；
+2. Skill 如何判断结构类型和电子类型；
+3. 两次人工确认分别发生在哪里；
+4. 三维体相、二维薄层和一维周期体系的结果应如何区别解释；
+5. 从预检到 VALIDATION=PASS 的命令顺序。
+
+这是安全发现测试。不要读取本工作区以外的任何文件，不要运行 VASP，不要创建、修改、移动或删除文件，也不要读取任何 POTCAR、OUTCAR、vasprun.xml、WAVECAR 或 WAVEDER。最后明确写出你使用的 Skill 名称。

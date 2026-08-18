@@ -1,0 +1,17 @@
+我是第一次使用 VASP 光学计算，不懂如何判断任务是否完成。
+
+请使用 run-vasp-optics-adaptive-v0-7 Skill，只读检查当前工作区中的三组现有结果：
+
+1. runs/bulk-3d
+2. runs/slab-2d
+3. runs/wire-1d
+
+不要运行新的 VASP，不要覆盖、移动或删除任何文件，也不要修改输入文件。请根据每组的 system_classification.json、01_LOPTICS/OUTCAR、vasprun.xml、WAVECAR、WAVEDER、光学 CSV、metadata 和 PNG 文件回答：
+
+- Skill 识别出的结构类型和电子类型是什么；
+- 计算是否真正完成，证据是什么；
+- 哪些结果可以解释为三维体相内禀光学常数，哪些不能；
+- CSV 每一行表示什么，主要图在哪里；
+- 下一步若做正式研究，还缺哪些收敛测试。
+
+最后给出一个三行汇总表，并明确写出“可以继续”或“不能继续”。

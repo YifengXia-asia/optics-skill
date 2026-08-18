@@ -1,0 +1,12 @@
+run:
+  input_dir: /path/to/optics-type-tests-v0.7/inputs/bulk-3d
+  output_dir: /path/to/optics-type-tests-v0.7/negative-mpi-mismatch
+  confirm_recommendations: true
+environment:
+  vasp_bin: /path/to/vasp_std
+  oneapi_setup: /opt/intel/oneapi/setvars.sh
+  mpi_launcher: /usr/bin/mpirun
+  mpi_cores: 4
+  timeout_seconds: 1200
+parameters:
+  response: density-density
