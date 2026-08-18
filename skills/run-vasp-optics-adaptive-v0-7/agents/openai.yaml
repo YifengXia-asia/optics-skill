@@ -1,4 +1,6 @@
 interface:
   display_name: "Run type-adaptive VASP optics (v0.7)"
-  short_description: "Classify, run, extract, and validate adaptive VASP optics"
-  default_prompt: "Use $run-vasp-optics-adaptive-v0-7 to inspect my VASP inputs, preserve valid user settings, classify the actual ground state, obtain both confirmations, run LOPTICS, and require VALIDATION=PASS."
+  short_description: "Continue VASP DFT to absorption and optical properties"
+  default_prompt: "Use $run-vasp-optics-adaptive-v0-7 to continue my completed VASP ground state to validated optical absorption without modifying the original DFT directory."
+policy:
+  allow_implicit_invocation: true

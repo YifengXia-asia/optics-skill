@@ -28,6 +28,8 @@
 
 用户提供同一体系的 `POSCAR/POTCAR/KPOINTS`，`output_dir` 不存在，Intel MPI 编译的 VASP 配置 oneAPI `mpirun`。先运行预检和 inspect，用户确认建议后运行 DFT；读取 `system_classification.json`，第二次确认后再运行 LOPTICS、提取、绘图和验证。只有出现 `VALIDATION=PASS` 才交付。
 
+普通用户也可以只说：“我已经算完 SiC 的 DFT，想继续算吸收率。”此时自动触发本 Skill，先定位已有 DFT 目录，解释吸收系数与给定厚度吸收率的区别，再决定复用已有 DFT 还是补算基态。不得要求用户先说出 Skill 名称。
+
 ## 明确反例
 
 以下做法是错误的，必须拒绝：

@@ -17,6 +17,7 @@
 | YAML 路径 | 类型 | 允许值/约束 | 示例默认值 |
 |---|---|---|---|
 | `run.input_dir` | 字符串路径 | 必须包含三个输入文件 | `./inputs` |
+| `run.existing_dft_dir` | 空字符串或目录路径 | 可选；设置时必须含同体系的 `POSCAR/POTCAR/KPOINTS/OUTCAR/vasprun.xml/WAVECAR/CHGCAR`，源目录只读 | 空 |
 | `run.output_dir` | 字符串路径 | 必须不存在；拒绝覆盖 | `./stage1_demo` |
 | `run.material` | 字符串 | 只用于显示；`auto` 或任意用户标签 | `auto` |
 | `run.prefix` | 字符串 | 只用于文件名；建议使用字母、数字、`_`、`-`、`.` | `auto` |
@@ -56,6 +57,17 @@
 - `sigma1_S_m`：由 `epsilon0 × omega × epsilon2` 得到的实部光学电导率，单位 S/m。
 
 `system_classification.json` 保存基态本征值分类依据；`<prefix>_optics_metadata.json` 保存体相/非体相归一化标签和金属处理模式。两者必须与 CSV 一起交付。
+
+## 已有 DFT 复用契约
+
+设置 `run.existing_dft_dir` 后，`config_loader.py --inspect/--check` 必须确认：
+
+- 七个必需文件非空；
+- `OUTCAR` 含最终 `General timing and accounting`；
+- 其 `POSCAR/POTCAR/KPOINTS` 与 `run.input_dir` 的文件逐字节一致；
+- 新的 `output_dir` 不存在。
+
+`prepare.py` 只把已有 DFT 的输入、结果和可选 INCAR 复制到新建的 `00_DFT`，并输出 `DFT_SOURCE=REUSED_COPY` 与 `SOURCE_MODIFIED=false`。后续从复制出的 `vasprun.xml` 分类，不在源目录运行 VASP。若这些检查失败，回到完整基态流程，不能把不完整结果当作已完成 DFT。
 
 ## 应该先看什么
 

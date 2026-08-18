@@ -15,6 +15,7 @@
 cd skills/run-vasp-optics-adaptive-v0-7
 cp config.yaml.example config.yaml
 # 将 POSCAR、POTCAR、KPOINTS 放入 config.yaml 的 input_dir
+# 如果已有完整基态，可将 input_dir 和 existing_dft_dir 指向该基态目录；源目录只读
 python scripts/preflight.py --config config.yaml
 python scripts/config_loader.py --config config.yaml --inspect
 # 审阅分类和建议后，在 config.yaml 中设置 confirm_recommendations: true

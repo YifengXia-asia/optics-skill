@@ -140,7 +140,8 @@ def main() -> int:
         print("RUN=FAIL;partial ground-state outputs exist; use a new output_dir", file=sys.stderr)
         return 2
 
-    if not _complete_dft(dft):
+    dft_was_complete = _complete_dft(dft)
+    if not dft_was_complete:
         if args.stage == "loptics":
             print("RUN=FAIL;ground state has not been completed", file=sys.stderr)
             return 2
@@ -163,6 +164,15 @@ def main() -> int:
         if args.stage == "dft" or not bool(run.get("confirm_electronic_classification", False)):
             print("RUN=PAUSED;REASON=electronic classification requires review before LOPTICS")
             return 0
+
+    if dft_was_complete:
+        source = "reused-existing-dft" if str(run.get("existing_dft_dir", "") or "").strip() else "prepared-dft"
+        completed_report = _load_or_classify(config, dft, report_path)
+        print(
+            f"DFT=PASS;SOURCE={source};STRUCTURE_CLASS={completed_report['structure_class']};"
+            f"ELECTRONIC_CLASS={completed_report['electronic_class']};"
+            f"GAP_EV={completed_report.get('estimated_gap_eV')};REPORT={report_path}"
+        )
 
     report = _load_or_classify(config, dft, report_path)
     decision_problems = _decision_problems(config, report)

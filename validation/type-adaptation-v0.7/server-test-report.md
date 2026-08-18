@@ -46,7 +46,7 @@ Skill 没有按 SiC、石墨烯或碳链名称选择参数，而是按输入晶�
 
 ## 自动测试与静态评分
 
-- 本地 4 项自动测试通过：3D/2D/1D/孤立候选分类、用户 KPOINTS 保留、用户 INCAR 优先、电子类别路由、阈值可配置。
+- 本地 6 项自动测试通过：3D/2D/1D/孤立候选分类、用户 KPOINTS 保留、用户 INCAR 优先、电子类别路由、阈值可配置、完整已有 DFT 只读复用、不完整已有 DFT 拒绝。
 - Skill Creator `quick_validate.py`：通过。
 - Skill-eval v3.1：`98.5/100（卓越）`。
 - Skill-eval 报告：`llm_errors={}`、缺失引用为空、frontmatter 警告为空。
@@ -62,3 +62,15 @@ Skill 没有按 SiC、石墨烯或碳链名称选择参数，而是按输入晶�
 - 没有运行 VASP，也没有读取 POTCAR/OUTCAR/vasprun.xml/WAVECAR/WAVEDER。
 
 但事件审计发现 MatCreator 为定位 Skill 执行了对 `<HOME>` 的广泛文件名搜索。它只读取了目标 Skill 文档，没有读取 VASP 结果；仍说明 MatCreator 的工具边界控制不够精细。对三组完整结果做 API 验收前，必须得到用户针对这些结果文件和 DeepSeek 目的地的明确授权。
+
+不点名 Skill 的自然语言测试“SiC 基态 DFT 已完成，继续算吸收率”没有可靠选中 v0.7，而是检索到旧 v0.6 和早期 SiC 版本，最终回答也未正常交付。按用户约束，后续没有修改 MatCreator 源码、配置或搜索逻辑；只在 v0.7 Skill 的 frontmatter/body 中加入普通用户触发语义和隐式调用声明。因此 Skill 文件已具备正确触发描述，但 MatCreator 是否及时重建其外部索引不由本 Skill 控制。
+
+## 已有 DFT 只读复用测试
+
+以已完成的 bulk-3d 基态目录为源，设置 `run.existing_dft_dir` 后执行 `--inspect → prepare.py → run.py --stage dft`：
+
+- `INSPECT=OK;NO_FILES_CREATED=true`；
+- `DFT_SOURCE=REUSED_COPY;SOURCE_MODIFIED=false`；
+- 未启动 VASP；
+- 从复制的 `vasprun.xml` 得到 `semiconductor`、`1.342 eV`，随后停在第二确认门；
+- 源目录 `OUTCAR/vasprun.xml/WAVECAR/CHGCAR` 前后 SHA-256 完全一致。

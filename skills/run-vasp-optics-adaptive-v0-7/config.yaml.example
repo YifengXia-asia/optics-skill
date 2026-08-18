@@ -8,6 +8,7 @@
 
 run:
   input_dir: ./inputs
+  existing_dft_dir: ""          # 可选：已完成基态目录；设置后只读复制，不重跑原目录
   output_dir: ./stage1_demo
   material: auto                 # 只用于显示；auto 从元素和原子数生成化学式
   prefix: auto                   # 只控制 CSV/PNG 文件名，可自由修改

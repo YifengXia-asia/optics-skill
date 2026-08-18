@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import importlib.util
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -120,6 +122,60 @@ class TypeAdaptationTests(unittest.TestCase):
             self.assertEqual(config["_metadata"]["classification"]["structure_class"], "bulk-3d-candidate")
             self.assertEqual(config["parameters"]["encut"], 420.0)
             self.assertEqual(config["parameters"]["nbands"], 40)
+
+    def test_completed_dft_is_copied_read_only_into_new_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            input_dir = base / "inputs"
+            self.make_case(
+                base,
+                [[4, 0, 0], [0, 4, 0], [0, 0, 4]],
+                [6, 6, 6],
+                incar="ENCUT=400\nISPIN=1\n",
+                config_overrides={
+                    "run": {
+                        "existing_dft_dir": str(input_dir),
+                        "confirm_recommendations": True,
+                    }
+                },
+            )
+            completed_files = {
+                "OUTCAR": b"header\nGeneral timing and accounting\n",
+                "vasprun.xml": eigen_xml([[(-1, 2), (1, 0)]]).encode(),
+                "WAVECAR": b"wavecar-test-bytes",
+                "CHGCAR": b"chgcar-test-bytes",
+            }
+            for name, content in completed_files.items():
+                (input_dir / name).write_bytes(content)
+            before = {name: (input_dir / name).read_bytes() for name in completed_files}
+            config = config_loader.load_config(base / "config.yaml")
+            self.assertEqual(config_loader.validate_existing_dft(config), [])
+
+            result = subprocess.run(
+                [sys.executable, str(SCRIPTS / "prepare.py"), "--config", str(base / "config.yaml")],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("DFT_SOURCE=REUSED_COPY", result.stdout)
+            for name, content in completed_files.items():
+                self.assertEqual((base / "out" / "00_DFT" / name).read_bytes(), content)
+                self.assertEqual((input_dir / name).read_bytes(), before[name])
+
+    def test_incomplete_existing_dft_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            input_dir = base / "inputs"
+            config = self.make_case(
+                base,
+                [[4, 0, 0], [0, 4, 0], [0, 0, 4]],
+                [6, 6, 6],
+                config_overrides={"run": {"existing_dft_dir": str(input_dir)}},
+            )
+            problems = config_loader.validate_existing_dft(config)
+            self.assertTrue(any("OUTCAR" in problem for problem in problems))
+            self.assertTrue(any("WAVECAR" in problem for problem in problems))
 
     def classify(self, xml_text, structure="bulk-3d-candidate"):
         with tempfile.TemporaryDirectory() as tmp:

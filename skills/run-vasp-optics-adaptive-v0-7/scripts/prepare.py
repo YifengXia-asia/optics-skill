@@ -127,7 +127,17 @@ def main() -> int:
     material = str(run.get("material", "material"))
     _, metadata = inspect_inputs(config)
     preliminary = metadata.get("classification", {}).get("electronic_character")
-    write_incar_dft(dft, parameters, material, metadata)
+    existing_raw = str(run.get("existing_dft_dir", "") or "").strip()
+    existing_dft = Path(existing_raw) if existing_raw else None
+    if existing_dft is None:
+        write_incar_dft(dft, parameters, material, metadata)
+    else:
+        if (existing_dft / "INCAR").is_file():
+            shutil.copy2(existing_dft / "INCAR", dft / "INCAR")
+        else:
+            write_incar_dft(dft, parameters, material, metadata)
+        for name in ("OUTCAR", "vasprun.xml", "WAVECAR", "CHGCAR"):
+            shutil.copy2(existing_dft / name, dft / name)
     write_incar_loptics(
         optics,
         parameters,
@@ -145,6 +155,8 @@ def main() -> int:
     )
     print(f"INHERITED_INCAR_KEYS={sorted(metadata.get('input_incar', {}))}")
     print(f"PREPARE=OK;OUTPUT={output_dir}")
+    if existing_dft is not None:
+        print(f"DFT_SOURCE=REUSED_COPY;SOURCE={existing_dft};SOURCE_MODIFIED=false")
     print(f"DFT_INCAR={dft / 'INCAR'}")
     print(f"LOPTICS_INCAR_PRELIMINARY={optics / 'INCAR'}")
     return 0

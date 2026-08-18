@@ -1,15 +1,36 @@
 ---
 name: run-vasp-optics-adaptive-v0-7
-description: "Use when a user supplies VASP POSCAR, POTCAR and KPOINTS and wants an independent-particle optical workflow that adapts by physical system type rather than material name. Inspect and preserve user choices, classify bulk/2D/1D/isolated geometry, run a ground state, classify metal/semiconductor/insulator from actual eigenvalues, require two review gates, run LOPTICS with explicit metal and non-bulk policies, extract epsilon/n/k/alpha/reflectivity/loss/conductivity, and require read-only validation."
+description: "Use automatically when a user asks for VASP optical absorption, absorption coefficient/spectrum, dielectric function, refractive index, extinction coefficient, reflectivity, or LOPTICS—especially after an existing DFT/SCF run (for example: ‘SiC 的 DFT 算完了，继续算吸收率’). Accept either a completed ground-state directory or POSCAR/POTCAR/KPOINTS, adapt by physical system type rather than material name, require review gates, and validate outputs. The user does not need to name this skill."
+metadata:
+  tools:
+    - run_bash
+  dependent_skills: []
+  tags:
+    - vasp
+    - loptics
+    - optical-absorption
+    - dielectric-function
 ---
 
 # 自适应 VASP 光学工作流 v0.7
 
+## 0. 自动触发与入口分流
+
+用户不需要知道或说出 Skill 名称。遇到“算吸收率/吸收系数/吸收光谱/介电函数/折射率/消光系数/反射率/光学性质/LOPTICS”，或“基态 DFT/SCF 已算完，继续做光学”等自然语言时，应自动使用本技能。
+
+- **已有基态 DFT：** 先只问现有计算目录。该目录应包含同一体系的 `POSCAR/POTCAR/KPOINTS` 和非空的 `OUTCAR/vasprun.xml/WAVECAR/CHGCAR`。将 `run.input_dir` 与 `run.existing_dft_dir` 指向该目录。只读校验完成标志和文件一致性，再把所需文件复制到新的 `output_dir`；不得修改原目录，也不得无理由重跑基态。
+- **尚未做基态或结果不完整：** 要求用户提供 `POSCAR/POTCAR/KPOINTS`，按完整双闸门流程运行。
+- **用户只说材料名和目标：** 不要求用户先提供专业参数。先定位计算目录和已有文件，再由 Skill 报告缺项、提出起始建议并等待确认。
+
+“吸收系数 `alpha_cm-1`”与给定厚度样品的“吸收率/吸收比例”不是同一个量。若用户真正要吸收率，先得到 `alpha_cm-1`，再询问厚度和界面/多重反射模型；本阶段默认输出吸收系数，不凭空假设厚度。
+
 ## 1. 目标与边界
 
-严格按以下状态机执行：
+新计算严格按以下状态机执行：
 
 `输入事实 → 结构类型 → 初始参数建议 → 用户确认 → 基态 DFT → 电子类型 → 用户确认 → LOPTICS → 后处理 → 验证`
+
+复用已有 DFT 时，将“基态 DFT”替换为“只读完整性/一致性检查 → 复制到新输出目录”，之后仍必须进行电子分类、第二次确认、LOPTICS、后处理和验证。
 
 不要用 SiC、Si、NaCl 等材料名称选择参数。`material` 和 `prefix` 只用于显示和文件名。
 
@@ -26,6 +47,8 @@ description: "Use when a user supplies VASP POSCAR, POTCAR and KPOINTS and wants
 | `KPOINTS` | Gamma/Monkhorst 网格和偏移 | 三整数网格可解析 |
 
 可选读取 `input_dir/INCAR`。当 `parameters.parameter_policy: preserve-user` 时，优先继承用户已有的泛函、DFT+U、磁性、SOC 等物理标签；技能只覆盖完成本阶段所必需的运行标签。若用户值与 POTCAR、电子类型或 LOPTICS 不兼容，先解释冲突，再请用户决定，不能静默替换。
+
+若设置 `run.existing_dft_dir`，该目录还必须包含完成的 `OUTCAR/vasprun.xml/WAVECAR/CHGCAR`。Skill 只读取并复制它们到新的输出目录；源目录始终只读。已有 DFT 不自动等于光学参数已收敛，仍需检查泛函、KPOINTS、NBANDS、ISPIN/SOC 与目标能量窗口。
 
 本技能不下载、编译或猜测 POTCAR。不要把 POTCAR、API 密钥或私有路径提交到公共仓库。
 
@@ -48,7 +71,7 @@ VASP 阶段需要 Linux/Bash、GNU `timeout`、MPI 启动器、可执行 `vasp_s
 
 ### 3.2 基态后：电子类型
 
-运行 `00_DFT` 后，用 `scripts/classify_electronic.py` 读取实际 `vasprun.xml` 的本征值、占据数和费米能级，生成 `system_classification.json`：
+运行或只读复用 `00_DFT` 后，用 `scripts/classify_electronic.py` 读取实际 `vasprun.xml` 的本征值、占据数和费米能级，生成 `system_classification.json`：
 
 - `metal-or-semimetal`
 - `semiconductor`
@@ -99,6 +122,15 @@ python scripts/prepare.py --config config.yaml
 ```
 
 必须使用不存在的 `output_dir`。成功标志为 `PREPARE=OK`。
+
+若设置了 `existing_dft_dir`，还必须看到：
+
+```text
+DFT_SOURCE=REUSED_COPY
+SOURCE_MODIFIED=false
+```
+
+这表示 Skill 把已完成基态复制到新的 `00_DFT`，原始目录没有被修改。
 
 ### 5.3 基态 DFT 和第二闸门
 

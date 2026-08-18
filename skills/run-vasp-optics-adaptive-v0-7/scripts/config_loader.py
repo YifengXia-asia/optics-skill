@@ -28,6 +28,7 @@ AUTO = {"", "auto", "automatic", "default", "none", "null"}
 
 RUN_DEFAULTS = {
     "input_dir": "./inputs",
+    "existing_dft_dir": "",
     "output_dir": "./stage1_demo",
     "material": "auto",
     "prefix": "auto",
@@ -551,8 +552,36 @@ def inspect_inputs(config: dict) -> tuple[list[str], dict]:
     return resolve_config(config)
 
 
+def validate_existing_dft(config: dict) -> list[str]:
+    """Validate an optional completed ground-state directory without changing it."""
+    run = config["run"]
+    raw_path = str(run.get("existing_dft_dir", "") or "").strip()
+    if not raw_path:
+        return []
+    directory = Path(raw_path)
+    problems: list[str] = []
+    if not directory.is_dir():
+        return [f"run.existing_dft_dir is not a directory: {directory}"]
+    required = ("POSCAR", "POTCAR", "KPOINTS", "OUTCAR", "vasprun.xml", "WAVECAR", "CHGCAR")
+    for name in required:
+        path = directory / name
+        if not path.is_file() or path.stat().st_size == 0:
+            problems.append(f"Existing DFT is missing a non-empty {name}: {path}")
+    outcar = directory / "OUTCAR"
+    if outcar.is_file() and "General timing and accounting" not in outcar.read_text(errors="replace"):
+        problems.append("Existing DFT OUTCAR has no final timing block")
+    input_dir = Path(run["input_dir"])
+    for name in ("POSCAR", "POTCAR", "KPOINTS"):
+        source = input_dir / name
+        existing = directory / name
+        if source.is_file() and existing.is_file() and source.read_bytes() != existing.read_bytes():
+            problems.append(f"Existing DFT {name} differs from run.input_dir/{name}")
+    return problems
+
+
 def validate_prepare(config: dict) -> list[str]:
     problems, _ = inspect_inputs(config)
+    problems.extend(validate_existing_dft(config))
     run = config["run"]
     output_dir = Path(run["output_dir"])
     if output_dir.exists():
@@ -580,6 +609,12 @@ def _print_report(metadata: dict) -> None:
     print(f"DECISION={metadata['decision_summary']}")
 
 
+def _print_existing_dft(config: dict) -> None:
+    path = str(config["run"].get("existing_dft_dir", "") or "").strip()
+    if path:
+        print(f"EXISTING_DFT={path};REUSE_MODE=REQUESTED;SOURCE_WILL_REMAIN_READ_ONLY=true")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=Path("config.yaml"))
@@ -589,15 +624,18 @@ def main() -> int:
     config = load_config(args.config)
     if args.inspect:
         problems, metadata = inspect_inputs(config)
+        problems.extend(validate_existing_dft(config))
         if problems:
             for message in problems:
                 print(f"INPUT=INVALID;{message}", file=sys.stderr)
             return 2
         _print_report(metadata)
+        _print_existing_dft(config)
         print("INSPECT=OK;NO_FILES_CREATED=true")
         return 0
     if args.check:
         problems, metadata = inspect_inputs(config)
+        problems.extend(validate_existing_dft(config))
         output_dir = Path(config["run"]["output_dir"])
         if output_dir.exists():
             problems.append(f"Output directory already exists (refusing to overwrite): {output_dir}")
@@ -611,6 +649,7 @@ def main() -> int:
             return 3 if any("Confirmation required" in x for x in problems) else 2
         print(f"CONFIG=VALID;OUTPUT={config['run']['output_dir']}")
         _print_report(metadata)
+        _print_existing_dft(config)
         return 0
     problems, metadata = inspect_inputs(config)
     if problems:
@@ -625,6 +664,7 @@ def main() -> int:
         f"KPOINTS={'x'.join(map(str, p['kpoints']))};RESPONSE={p['response']}"
     )
     _print_report(metadata)
+    _print_existing_dft(config)
     return 0
 
 
